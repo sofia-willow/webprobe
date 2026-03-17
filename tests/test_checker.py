@@ -232,6 +232,14 @@ class TestCli:
         assert "WebProbe" in result.output
         assert result.exit_code == 0
 
+    def _extract_json(self, output: str) -> str:
+        """Extract JSON from output that may contain status lines."""
+        # Find the first '[' which starts the JSON array
+        idx = output.find("[")
+        if idx == -1:
+            return output
+        return output[idx:]
+
     def test_file_input(self, tmp_path: pytest.TempPathFactory) -> None:
         url_file = tmp_path / "urls.txt"  # type: ignore[operator]
         url_file.write_text("https://example.com\n# comment\n\nhttps://google.com\n")
@@ -243,7 +251,7 @@ class TestCli:
             ]
             runner = CliRunner()
             result = runner.invoke(main, ["-f", str(url_file), "-o", "json"])
-            data = json.loads(result.output)
+            data = json.loads(self._extract_json(result.output))
             assert len(data) == 2
 
     def test_json_output(self) -> None:
@@ -253,7 +261,7 @@ class TestCli:
             ]
             runner = CliRunner()
             result = runner.invoke(main, ["https://example.com", "-o", "json"])
-            data = json.loads(result.output)
+            data = json.loads(self._extract_json(result.output))
             assert data[0]["url"] == "https://example.com"
 
     def test_csv_output(self) -> None:
