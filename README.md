@@ -95,6 +95,32 @@ pip install pytest
 python -m pytest tests/ -v
 ```
 
+## 📚 Library Usage
+
+Use WebProbe programmatically in your own async code:
+
+```python
+import asyncio
+from webprobe.checker import probe_url, probe_many
+
+async def main():
+    # Single URL
+    result = await probe_url("https://example.com", timeout_seconds=10)
+    print(f"{result.url} → {result.status_code} ({result.response_time_ms:.0f}ms)")
+    
+    if result.ssl_days_remaining is not None:
+        print(f"  SSL expires in {result.ssl_days_remaining} days")
+    
+    # Multiple URLs concurrently
+    urls = ["https://google.com", "https://github.com", "https://python.org"]
+    results = await probe_many(urls, concurrency=5)
+    for r in results:
+        status = "✅" if r.healthy else "❌"
+        print(f"  {status} {r.url} → {r.status_code}")
+
+asyncio.run(main())
+```
+
 ## 📝 License
 
 MIT License — see [LICENSE](LICENSE) for details.
